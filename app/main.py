@@ -9,7 +9,8 @@ def main():
             break
         if command.split(" ")[0] == "echo":
             print(command[5:])
-        print(f"{command}: command not found")
+        else:
+            (f"{command}: command not found")
 
 
 if __name__ == "__main__":
