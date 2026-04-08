@@ -23,7 +23,7 @@ def check_type(command: str) -> str:
     else:
         path = get_path(command)
         if path is not None:
-            return f"{command} is path"
+            return f"{command} is {path}"
     return f"{command}: not found"
 
 
