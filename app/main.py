@@ -1,7 +1,8 @@
 import os
 import sys
+from typing import Callable
 
-COMMANDS = {
+COMMANDS: dict[str, Callable[[str], None]] = {
     "exit": lambda line: sys.exit(0),
     "echo": lambda line: print(line[5:]),
     "type": lambda line: print(check_type(line[5:])),
@@ -9,11 +10,12 @@ COMMANDS = {
 
 
 def get_path(command: str) -> str | None:
-    if os.getenv("PATH") is not None:
-        for path in os.getenv("PATH").split(os.pathsep):
-            if os.path.exists(os.path.join(path, command)):
-                if os.access(os.path.join(path, command), os.X_OK):
-                    return os.path.join(path, command)
+    path = os.getenv("PATH")
+    if path is not None:
+        for p in path.split(os.pathsep):
+            if os.path.exists(os.path.join(p, command)):
+                if os.access(os.path.join(p, command), os.X_OK):
+                    return os.path.join(p, command)
     return None
 
 
@@ -30,11 +32,17 @@ def check_type(command: str) -> str:
 def main():
     while True:
         sys.stdout.write("$ ")
-        command = input()
-        if command.split(" ")[0] in COMMANDS:
-            COMMANDS[command.split(" ")[0]](command)
+        line = input()
+
+        command = line.split(" ")[0]
+        if command in COMMANDS:
+            COMMANDS[command](line)
         else:
-            print(f"{command}: command not found")
+            path = get_path(command)
+            if path is not None:
+                os.execv(path, line.split(" ")[1:])
+            else:
+                print(f"{command}: command not found")
 
 
 if __name__ == "__main__":
