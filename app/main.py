@@ -40,7 +40,7 @@ def main():
         else:
             path = get_path(command)
             if path is not None:
-                os.execv(path, line.split(" ")[1:])
+                os.execv(path, line.split(" "))
             else:
                 print(f"{command}: command not found")
 
