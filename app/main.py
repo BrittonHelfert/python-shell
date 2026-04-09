@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 from typing import Callable
 
@@ -32,17 +33,23 @@ def check_type(command: str) -> str:
 def main():
     while True:
         sys.stdout.write("$ ")
-        line = input()
 
-        command = line.split(" ")[0]
+        line = input()
+        args = line.split(" ")
+
+        command = args[0]
         if command in COMMANDS:
             COMMANDS[command](line)
-        else:
-            path = get_path(command)
-            if path is not None:
-                os.execv(path, line.split(" "))
-            else:
-                print(f"{command}: command not found")
+            continue
+
+        try:
+            subprocess.run(args)
+        except FileNotFoundError:
+            print(f"{command}: not found")
+        except PermissionError:
+            print(f"{command}: permission denied")
+        except Exception as e:
+            print(f"{command}: {e}")
 
 
 if __name__ == "__main__":
