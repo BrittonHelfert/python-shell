@@ -7,6 +7,7 @@ COMMANDS: dict[str, Callable[[str], None]] = {
     "exit": lambda line: sys.exit(0),
     "echo": lambda line: print(line[5:]),
     "type": lambda line: print(check_type(line[5:])),
+    "pwd": lambda line: print(os.getcwd()),
 }
 
 
