@@ -8,8 +8,17 @@ COMMANDS: dict[str, Callable[[str], None]] = {
     "echo": lambda line: print(line[5:]),
     "type": lambda line: print(check_type(line[5:])),
     "pwd": lambda line: print(os.getcwd()),
-    "cd": lambda line: os.chdir(line[3:]),
+    "cd": lambda line: cd(line[3:]),
 }
+
+
+def cd(path: str) -> None:
+    try:
+        os.chdir(path)
+    except FileNotFoundError:
+        print(f"cd: {path}: No such file or directory")
+    except Exception as e:
+        print(f"{path}: {e}")
 
 
 def get_path(command: str) -> str | None:
