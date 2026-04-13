@@ -14,7 +14,7 @@ COMMANDS: dict[str, Callable[[str], None]] = {
 
 def cd(path: str) -> None:
     try:
-        os.chdir(path)
+        os.chdir(os.path.expanduser(path))
     except FileNotFoundError:
         print(f"cd: {path}: No such file or directory")
     except Exception as e:
