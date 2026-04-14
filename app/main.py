@@ -3,8 +3,7 @@ import subprocess
 import sys
 from typing import Callable
 
-from parser import parse_input
-
+from .parser import parse_input
 from .types import ParsedCommand
 
 COMMANDS: dict[str, Callable[[list[str]], None]] = {
