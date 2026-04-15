@@ -8,7 +8,7 @@ class ParsedCommand:
     args: List[str]
 
     @property
-    def args_list(self) -> List[str]:
+    def args_with_name(self) -> List[str]:
         return [self.name, *self.args]
 
     @property
