@@ -17,11 +17,20 @@ def split_tokens(line: str) -> list[str]:
     res = []
     curr_token = ""
     inside_single_quotes = False
+    inside_double_quotes = False
     for char in line:
-        if char == "'":
-            inside_single_quotes = not inside_single_quotes
-        elif char == " ":
+        if char == '"':
             if inside_single_quotes:
+                curr_token += char
+            else:
+                inside_double_quotes = not inside_double_quotes
+        elif char == "'":
+            if inside_double_quotes:
+                curr_token += char
+            else:
+                inside_single_quotes = not inside_single_quotes
+        elif char == " ":
+            if inside_single_quotes or inside_double_quotes:
                 curr_token += char
             else:
                 if curr_token:
