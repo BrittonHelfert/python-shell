@@ -1,5 +1,3 @@
-from json.encoder import ESCAPE_ASCII
-
 from .types import ParsedCommand
 
 
@@ -21,7 +19,7 @@ def split_tokens(line: str) -> list[str]:
     inside_single_quotes = False
     inside_double_quotes = False
     escape_next = False
-    for char in line:
+    for i, char in enumerate(line):
         if escape_next:
             curr_token += char
             escape_next = False
@@ -36,8 +34,13 @@ def split_tokens(line: str) -> list[str]:
             else:
                 inside_single_quotes = not inside_single_quotes
         elif char == "\\":
-            if inside_single_quotes or inside_double_quotes:
+            if inside_single_quotes:
                 curr_token += char
+            elif inside_double_quotes:
+                if i < len(line) - 1 and line[i + 1] in {'"', "\\", "$", "`", "\n"}:
+                    escape_next = True
+                else:
+                    curr_token += char
             else:
                 escape_next = True
         elif char == " ":
@@ -51,6 +54,6 @@ def split_tokens(line: str) -> list[str]:
             curr_token += char
     if curr_token:
         res.append(curr_token)
-    if inside_single_quotes:
-        raise ParseSyntaxError("unterminated single quote")
+    if inside_single_quotes or inside_double_quotes:
+        raise ParseSyntaxError("unterminated quote")
     return res
