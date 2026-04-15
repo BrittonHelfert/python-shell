@@ -11,7 +11,8 @@ def parse_input(line: str) -> ParsedCommand:
 
 
 def split_input(line: str) -> list[str]:
-    return extract_quotes(line)
+    name = line.split(" ", 1)[0]
+    return [name, *extract_quotes(line[len(name) + 1 :])]
 
 
 def extract_quotes(line: str) -> list[str]:
