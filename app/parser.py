@@ -12,7 +12,7 @@ def parse_input(line: str) -> ParsedCommand:
 
 def split_input(line: str) -> list[str]:
     name = line.split(" ", 1)[0]
-    return [name, *extract_quotes(line[len(name) + 2 :])]
+    return [name, *extract_quotes(line[len(name) + 1 :])]
 
 
 def extract_quotes(line: str) -> list[str]:
@@ -21,6 +21,8 @@ def extract_quotes(line: str) -> list[str]:
         res = []
         start = 0
         inside_single_quotes = False
+        while line[0] == " ":
+            line = line[1:]
         for i, char in enumerate(line):
             if char == "'":
                 res.append(line[start:i])
