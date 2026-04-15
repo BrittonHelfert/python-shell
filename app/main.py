@@ -8,7 +8,7 @@ from .types import ParsedCommand
 
 COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "exit": lambda args: sys.exit(0),
-    "echo": lambda args: print("".join(args)),
+    "echo": lambda args: print(" ".join(args)),
     "type": lambda args: print(check_type(" ".join(args))),
     "pwd": lambda args: print(os.getcwd()),
     "cd": lambda args: cd(" ".join(args)),
