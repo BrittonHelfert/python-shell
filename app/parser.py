@@ -1,3 +1,5 @@
+from json.encoder import ESCAPE_ASCII
+
 from .types import ParsedCommand
 
 
@@ -18,8 +20,12 @@ def split_tokens(line: str) -> list[str]:
     curr_token = ""
     inside_single_quotes = False
     inside_double_quotes = False
+    escape_next = False
     for char in line:
-        if char == '"':
+        if escape_next:
+            curr_token += char
+            escape_next = False
+        elif char == '"':
             if inside_single_quotes:
                 curr_token += char
             else:
@@ -29,6 +35,11 @@ def split_tokens(line: str) -> list[str]:
                 curr_token += char
             else:
                 inside_single_quotes = not inside_single_quotes
+        elif char == "\\":
+            if inside_single_quotes or inside_double_quotes:
+                curr_token += char
+            else:
+                escape_next = True
         elif char == " ":
             if inside_single_quotes or inside_double_quotes:
                 curr_token += char
