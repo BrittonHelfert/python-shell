@@ -10,21 +10,26 @@ def parse_input(line: str) -> ParsedCommand:
 
     stdout_redirect_path = None
     stderr_redirect_path = None
+    stdout_redirect_append = False
+    stderr_redirect_append = False
+
     command_parts: list[str] = []
 
     i = 0
     while i < len(parts):
         tok = parts[i]
-        if tok in {">", "1>"}:
+        if tok in {">", "1>", ">>", "1>>"}:
             if i + 1 >= len(parts):
                 raise ParseSyntaxError("missing redirect file")
             stdout_redirect_path = parts[i + 1]
+            stderr_redirect_append = tok in {"1>>", ">>"}
             i += 2
             continue
-        elif tok == "2>":
+        elif tok in {"2>", "2>>"}:
             if i + 1 >= len(parts):
                 raise ParseSyntaxError("missing redirect file")
             stderr_redirect_path = parts[i + 1]
+            stderr_redirect_append = tok == "2>>"
             i += 2
             continue
 
@@ -35,7 +40,9 @@ def parse_input(line: str) -> ParsedCommand:
         name=command_parts[0] if command_parts else "",
         args=command_parts[1:] if command_parts else [],
         stdout_redirect_path=stdout_redirect_path,
+        stdout_redirect_append=stdout_redirect_append,
         stderr_redirect_path=stderr_redirect_path,
+        stderr_redirect_append=stderr_redirect_append,
     )
 
 

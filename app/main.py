@@ -51,11 +51,13 @@ def run_command(command: ParsedCommand) -> None:
         stderr_target = None
 
         if command.stdout_redirect_path is not None:
-            stdout_target = open(command.stdout_redirect_path, "w")
+            mode = "a" if command.stdout_redirect_append else "w"
+            stdout_target = open(command.stdout_redirect_path, mode)
             stack.enter_context(redirect_stdout(stdout_target))
 
         if command.stderr_redirect_path is not None:
-            stderr_target = open(command.stderr_redirect_path, "w")
+            mode = "a" if command.stderr_redirect_append else "w"
+            stderr_target = open(command.stderr_redirect_path, mode)
             stack.enter_context(redirect_stderr(stderr_target))
 
         _run_with_output(command, stdout_target, stderr_target)
