@@ -22,7 +22,7 @@ def parse_input(line: str) -> ParsedCommand:
             if i + 1 >= len(parts):
                 raise ParseSyntaxError("missing redirect file")
             stdout_redirect_path = parts[i + 1]
-            stderr_redirect_append = tok in {"1>>", ">>"}
+            stdout_redirect_append = tok in {"1>>", ">>"}
             i += 2
             continue
         elif tok in {"2>", "2>>"}:
