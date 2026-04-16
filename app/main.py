@@ -1,7 +1,7 @@
+import contextlib
 import os
 import subprocess
 import sys
-from this import s
 from typing import Callable
 
 from .parser import parse_input
@@ -49,8 +49,9 @@ def run_command(command: ParsedCommand) -> None:
     # Check if it's a builtin
     if command.name in COMMANDS:
         if command.stdout_redirect_path is not None:
-            with open(command.stdout_redirect_path, "w"):
-                COMMANDS[command.name](command.args)
+            with open(command.stdout_redirect_path, "w") as f:
+                with contextlib.redirect_stdout(f):
+                    COMMANDS[command.name](command.args)
         else:
             COMMANDS[command.name](command.args)
 
