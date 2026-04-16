@@ -7,6 +7,7 @@ class ParsedCommand:
     name: str
     args: List[str]
     stdout_redirect_path: str | None = None
+    stderr_redirect_path: str | None = None
 
     @property
     def args_with_name(self) -> List[str]:
