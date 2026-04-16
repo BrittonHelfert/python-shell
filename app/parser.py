@@ -6,10 +6,29 @@ class ParseSyntaxError(Exception):
 
 
 def parse_input(line: str) -> ParsedCommand:
-    if line.strip() == "":
-        return ParsedCommand(name="", args=[])
     parts = split_tokens(line)
-    return ParsedCommand(name=parts[0], args=parts[1:])
+
+    stdout_redirect_path = None
+    command_parts: list[str] = []
+
+    i = 0
+    while i < len(parts):
+        tok = parts[i]
+        if tok in {">", "1>"}:
+            if i + 1 >= len(parts):
+                raise ParseSyntaxError("missing redirect file")
+            stdout_redirect_path = parts[i + 1]
+            i += 2
+            continue
+
+        command_parts.append(tok)
+        i += 1
+
+    return ParsedCommand(
+        name=command_parts[0] if command_parts else "",
+        args=command_parts[1:] if command_parts else [],
+        stdout_redirect_path=stdout_redirect_path,
+    )
 
 
 def split_tokens(line: str) -> list[str]:
