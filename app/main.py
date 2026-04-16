@@ -1,7 +1,7 @@
-import contextlib
 import os
 import subprocess
 import sys
+from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from typing import Callable
 
 from .parser import parse_input
@@ -46,29 +46,38 @@ def check_type(command: str) -> str:
 
 
 def run_command(command: ParsedCommand) -> None:
+    with ExitStack() as stack:
+        stdout_target = None
+        stderr_target = None
+
+        if command.stdout_redirect_path is not None:
+            stdout_target = open(command.stdout_redirect_path, "w")
+            stack.enter_context(redirect_stdout(stdout_target))
+
+        if command.stderr_redirect_path is not None:
+            stderr_target = open(command.stderr_redirect_path, "w")
+            stack.enter_context(redirect_stderr(stderr_target))
+
+        _run_with_output(command, stdout_target, stderr_target)
+
+
+def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> None:
     # Check if it's a builtin
     if command.name in COMMANDS:
-        if command.stdout_redirect_path is not None:
-            with open(command.stdout_redirect_path, "w") as f:
-                with contextlib.redirect_stdout(f):
-                    COMMANDS[command.name](command.args)
-        else:
-            COMMANDS[command.name](command.args)
+        COMMANDS[command.name](command.args)
 
     # Otherwise, try to run it as an external command
     else:
         try:
-            if command.stdout_redirect_path is not None:
-                with open(command.stdout_redirect_path, "w") as f:
-                    subprocess.run(command.args_with_name, stdout=f)
-            else:
-                subprocess.run(command.args_with_name)
+            subprocess.run(
+                command.args_with_name, stdout=stdout_target, stderr=stderr_target
+            )
         except FileNotFoundError:
-            print(f"{command.name}: not found", file=sys.stderr)
+            print(f"{command.name}: not found")
         except PermissionError:
-            print(f"{command.name}: permission denied", file=sys.stderr)
+            print(f"{command.name}: permission denied")
         except Exception as e:
-            print(f"{command.name}: {e}", file=sys.stderr)
+            print(f"{command.name}: {e}")
 
 
 def main():
