@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from this import s
 from typing import Callable
 
 from .parser import parse_input
@@ -47,18 +48,26 @@ def check_type(command: str) -> str:
 def run_command(command: ParsedCommand) -> None:
     # Check if it's a builtin
     if command.name in COMMANDS:
-        COMMANDS[command.name](command.args)
+        if command.stdout_redirect_path is not None:
+            with open(command.stdout_redirect_path, "w"):
+                COMMANDS[command.name](command.args)
+        else:
+            COMMANDS[command.name](command.args)
 
     # Otherwise, try to run it as an external command
     else:
         try:
-            subprocess.run(command.args_with_name)
+            if command.stdout_redirect_path is not None:
+                with open(command.stdout_redirect_path, "w") as f:
+                    subprocess.run(command.args_with_name, stdout=f)
+            else:
+                subprocess.run(command.args_with_name)
         except FileNotFoundError:
-            print(f"{command.name}: not found")
+            print(f"{command.name}: not found", file=sys.stderr)
         except PermissionError:
-            print(f"{command.name}: permission denied")
+            print(f"{command.name}: permission denied", file=sys.stderr)
         except Exception as e:
-            print(f"{command.name}: {e}")
+            print(f"{command.name}: {e}", file=sys.stderr)
 
 
 def main():
