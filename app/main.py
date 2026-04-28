@@ -3,6 +3,7 @@ import readline
 import subprocess
 import sys
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
+from nt import remove
 from pathlib import Path
 from typing import Callable
 
@@ -33,12 +34,11 @@ def cd(path: str) -> None:
 
 
 def list_jobs() -> None:
-    assign_markers()
     for job in background_jobs:
         status = "Running" + " " * 17 if job.proc.poll() is None else "Done" + " " * 20
         print(f"[{job.num}]{job.marker}  {status}  {job.command}")
     # remove completed jobs
-    background_jobs[:] = [job for job in background_jobs if job.proc.poll() is None]
+    remove_completed_jobs()
 
 
 def assign_markers() -> None:
@@ -117,6 +117,7 @@ def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> No
                 )
                 print(f"[{curr_background_num}] {proc.pid}")
                 curr_background_num += 1
+                assign_markers()
             else:
                 subprocess.run(
                     command.args_with_name, stdout=stdout_target, stderr=stderr_target
@@ -168,7 +169,7 @@ def main():
         command = parse_input(line)
 
         run_command(command)
-        remove_completed_jobs()
+        remove_completed_jobs(print_each=True)
 
 
 if __name__ == "__main__":
