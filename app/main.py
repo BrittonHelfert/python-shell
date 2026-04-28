@@ -32,18 +32,25 @@ def cd(path: str) -> None:
 
 
 def list_jobs() -> None:
+    # print jobs
     for i, job_and_command in enumerate(background_jobs):
         status = (
             "Running" + " " * 17
             if job_and_command[0].poll() is None
             else "Done" + " " * 20
         )
-        marker = ""
+        marker = " "
         if i == len(background_jobs) - 1:
             marker = "+"
         if i == len(background_jobs) - 2:
             marker = "-"
         print(f"[{i + 1}]{marker}  {status}  {job_and_command[1]}")
+    # remove completed jobs
+    background_jobs[:] = [
+        job_and_command
+        for job_and_command in background_jobs
+        if job_and_command[0].poll() is None
+    ]
 
 
 def get_path_of_external_command(command: str) -> str | None:
