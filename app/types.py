@@ -19,3 +19,7 @@ class ParsedCommand:
     @property
     def is_empty(self) -> bool:
         return self.name == ""
+
+    @property
+    def raw_command(self) -> str:
+        return " ".join(self.args_with_name)

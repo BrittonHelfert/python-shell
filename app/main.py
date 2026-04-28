@@ -19,11 +19,7 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
 }
 
 path = os.environ.get("PATH")
-background_job_num = 1
-
-
-def list_jobs() -> None:
-    return None
+background_jobs = []
 
 
 def cd(path: str) -> None:
@@ -33,6 +29,18 @@ def cd(path: str) -> None:
         print(f"cd: {path}: No such file or directory")
     except Exception as e:
         print(f"{path}: {e}")
+
+
+def list_jobs() -> None:
+    for i, job_and_command in enumerate(background_jobs):
+        status = (
+            "Running" + " " * 17
+            if job_and_command[0].poll() is None
+            else "Done" + " " * 20
+        )
+        print(
+            f"[{i + 1}]{'+' if i == len(background_jobs) - 1 else ' '}  {job_and_command[0].pid}  {status}  {job_and_command[1]}"
+        )
 
 
 def get_path_of_external_command(command: str) -> str | None:
@@ -85,8 +93,8 @@ def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> No
                 proc = subprocess.Popen(
                     command.args_with_name, stdout=stdout_target, stderr=stderr_target
                 )
-                print(f"[{background_job_num}] {proc.pid}")
-                background_job_num += 1
+                background_jobs.append([proc, command.raw_command])
+                print(f"[{len(background_jobs)}] {proc.pid}")
             else:
                 subprocess.run(
                     command.args_with_name, stdout=stdout_target, stderr=stderr_target
