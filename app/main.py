@@ -22,7 +22,7 @@ path = os.environ.get("PATH")
 
 
 def list_jobs() -> None:
-    print("")
+    return None
 
 
 def cd(path: str) -> None:
