@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Callable
 
 from .parser import parse_input
-from .types import ParsedCommand
+from .types import BackgroundJob, ParsedCommand
 
 BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "exit": lambda args: sys.exit(0),
@@ -20,7 +20,7 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
 
 path = os.environ.get("PATH")
 curr_background_num = 1
-background_jobs = []
+background_jobs: list[BackgroundJob] = []
 
 
 def cd(path: str) -> None:
@@ -33,22 +33,31 @@ def cd(path: str) -> None:
 
 
 def list_jobs() -> None:
-    # print jobs
-    for i, job_list in enumerate(background_jobs):
-        job = job_list[0]
-        num = job_list[1]
-        command = job_list[2]
-        status = "Running" + " " * 17 if job.poll() is None else "Done" + " " * 20
-        marker = " "
-        if i == len(background_jobs) - 1:
-            marker = "+"
-        if i == len(background_jobs) - 2:
-            marker = "-"
-        print(f"[{num}]{marker}  {status}  {command}")
+    assign_markers()
+    for job in background_jobs:
+        status = "Running" + " " * 17 if job.proc.poll() is None else "Done" + " " * 20
+        print(f"[{job.num}]{job.marker}  {status}  {job.command}")
     # remove completed jobs
-    background_jobs[:] = [
-        job_list for job_list in background_jobs if job_list[0].poll() is None
-    ]
+    background_jobs[:] = [job for job in background_jobs if job.proc.poll() is None]
+
+
+def assign_markers() -> None:
+    for i, job in enumerate(background_jobs):
+        if i == len(background_jobs) - 1:
+            job.marker = "+"
+        elif i == len(background_jobs) - 2:
+            job.marker = "-"
+        else:
+            job.marker = " "
+
+
+def remove_completed_jobs(print_each: bool = False) -> None:
+    assign_markers()
+    for job in background_jobs:
+        if job.proc.poll() is not None:
+            if print_each:
+                print(f"[{job.num}]{job.marker}  Done{' ' * 20}{job.command}")
+            background_jobs.remove(job)
 
 
 def get_path_of_external_command(command: str) -> str | None:
@@ -101,7 +110,11 @@ def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> No
                 proc = subprocess.Popen(
                     command.args_with_name, stdout=stdout_target, stderr=stderr_target
                 )
-                background_jobs.append([proc, curr_background_num, command.raw_command])
+                background_jobs.append(
+                    BackgroundJob(
+                        proc=proc, num=curr_background_num, command=command.raw_command
+                    )
+                )
                 print(f"[{curr_background_num}] {proc.pid}")
                 curr_background_num += 1
             else:
@@ -155,6 +168,7 @@ def main():
         command = parse_input(line)
 
         run_command(command)
+        remove_completed_jobs()
 
 
 if __name__ == "__main__":
