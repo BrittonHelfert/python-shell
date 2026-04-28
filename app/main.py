@@ -38,9 +38,12 @@ def list_jobs() -> None:
             if job_and_command[0].poll() is None
             else "Done" + " " * 20
         )
-        print(
-            f"[{i + 1}]{'+' if i == len(background_jobs) - 1 else ' '}  {status}  {job_and_command[1]}"
-        )
+        marker = ""
+        if i == len(background_jobs) - 1:
+            marker = "+"
+        if i == len(background_jobs) - 2:
+            marker = "-"
+        print(f"[{i + 1}]{marker}  {status}  {job_and_command[1]}")
 
 
 def get_path_of_external_command(command: str) -> str | None:
