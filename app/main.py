@@ -39,7 +39,7 @@ def list_jobs() -> None:
             else "Done" + " " * 20
         )
         print(
-            f"[{i + 1}]{'+' if i == len(background_jobs) - 1 else ' '}  {job_and_command[0].pid}  {status}  {job_and_command[1]}"
+            f"[{i + 1}]{'+' if i == len(background_jobs) - 1 else ' '}  {status}  {job_and_command[1]}"
         )
 
 
