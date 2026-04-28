@@ -51,12 +51,12 @@ def assign_markers() -> None:
 
 
 def remove_completed_jobs(print_each: bool = False) -> None:
-    assign_markers()
     for job in background_jobs:
         if job.proc.poll() is not None:
             if print_each:
                 print(f"[{job.num}]{job.marker}  Done{' ' * 20}{job.command}")
             background_jobs.remove(job)
+    assign_markers()
 
 
 def get_path_of_external_command(command: str) -> str | None:
