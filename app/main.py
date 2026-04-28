@@ -3,6 +3,7 @@ import readline
 import subprocess
 import sys
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
+from pathlib import Path
 from typing import Callable
 
 from .parser import parse_input
@@ -95,7 +96,7 @@ def completer(text, state):
                         os.path.join(d, f), os.X_OK
                     ):
                         options.append(f)
-    files_in_current_dir = [f for f in os.listdir(".") if os.path.isfile(f)]
+    files_in_current_dir = [str(f) for f in Path(".").rglob("*") if f.is_file()]
     options.extend(files_in_current_dir)
     matches = [s for s in options if s.startswith(text)]
     return matches[state] + " " if state < len(matches) else None
