@@ -10,6 +10,7 @@ class ParsedCommand:
     stdout_redirect_append: bool = False
     stderr_redirect_path: str | None = None
     stderr_redirect_append: bool = False
+    is_background: bool = False
 
     @property
     def args_with_name(self) -> List[str]:

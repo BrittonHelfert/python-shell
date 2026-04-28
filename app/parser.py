@@ -36,6 +36,11 @@ def parse_input(line: str) -> ParsedCommand:
         command_parts.append(tok)
         i += 1
 
+    is_background = False
+    if command_parts and command_parts[-1] == "&":
+        command_parts.pop()
+        is_background = True
+
     return ParsedCommand(
         name=command_parts[0] if command_parts else "",
         args=command_parts[1:] if command_parts else [],
@@ -43,6 +48,7 @@ def parse_input(line: str) -> ParsedCommand:
         stdout_redirect_append=stdout_redirect_append,
         stderr_redirect_path=stderr_redirect_path,
         stderr_redirect_append=stderr_redirect_append,
+        is_background=is_background,
     )
 
 
