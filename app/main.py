@@ -97,14 +97,14 @@ def completer(text, state):
                     ):
                         options.append(f)
     for entry in Path(".").rglob("*"):
-        if entry.is_file():
-            options.append(str(entry) + " ")
         if entry.is_dir():
             options.append(str(entry) + "/")
+        else:
+            options.append(str(entry))
     matches = [s for s in options if s.startswith(text)]
     if state < len(matches):
         match = matches[state]
-        return match if match.endswith("/") else match
+        return match if match.endswith("/") else match + " "
     else:
         return None
 
