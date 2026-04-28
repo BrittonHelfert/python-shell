@@ -19,7 +19,7 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
 }
 
 path = os.environ.get("PATH")
-curr_background_num = 1
+assigned_nums: set[int] = set()
 background_jobs: list[BackgroundJob] = []
 
 
@@ -50,11 +50,20 @@ def assign_markers() -> None:
             job.marker = " "
 
 
+def get_next_free_background_num() -> int:
+    res = 1
+    while res in assigned_nums:
+        res += 1
+    return res
+
+
 def remove_completed_jobs(print_each: bool = False) -> None:
+    global next_background_num_to_assign
     for job in background_jobs:
         if job.proc.poll() is not None:
             if print_each:
                 print(f"[{job.num}]{job.marker}  Done{' ' * 20}{job.command}")
+            assigned_nums.remove(job.num)
             background_jobs.remove(job)
     assign_markers()
 
@@ -105,17 +114,19 @@ def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> No
     else:
         try:
             if command.is_background:
-                global curr_background_num
                 proc = subprocess.Popen(
                     command.args_with_name, stdout=stdout_target, stderr=stderr_target
                 )
+                job_num = get_next_free_background_num()
                 background_jobs.append(
                     BackgroundJob(
-                        proc=proc, num=curr_background_num, command=command.raw_command
+                        proc=proc,
+                        num=job_num,
+                        command=command.raw_command,
                     )
                 )
-                print(f"[{curr_background_num}] {proc.pid}")
-                curr_background_num += 1
+                print(f"[{job_num}] {proc.pid}")
+                assigned_nums.add(job_num)
                 assign_markers()
             else:
                 subprocess.run(
