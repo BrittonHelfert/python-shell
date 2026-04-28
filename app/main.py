@@ -20,7 +20,7 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
 
 path = os.environ.get("PATH")
 curr_background_num = 1
-background_jobs = {}
+background_jobs = []
 
 
 def cd(path: str) -> None:
@@ -34,22 +34,21 @@ def cd(path: str) -> None:
 
 def list_jobs() -> None:
     # print jobs
-    for i, job_and_command in background_jobs.items():
-        status = (
-            "Running" + " " * 17
-            if job_and_command[0].poll() is None
-            else "Done" + " " * 20
-        )
+    for i, job_list in enumerate(background_jobs):
+        job = job_list[0]
+        num = job_list[1]
+        command = job_list[2]
+        status = "Running" + " " * 17 if job.poll() is None else "Done" + " " * 20
         marker = " "
         if i == len(background_jobs) - 1:
             marker = "+"
         if i == len(background_jobs) - 2:
             marker = "-"
-        print(f"[{i + 1}]{marker}  {status}  {job_and_command[1]}")
+        print(f"[{num}]{marker}  {status}  {command}")
     # remove completed jobs
-    for i in list(background_jobs.keys()):
-        if background_jobs[i][0].poll() is not None:
-            del background_jobs[i]
+    background_jobs[:] = [
+        job_list for job_list in background_jobs if job_list[0].poll() is None
+    ]
 
 
 def get_path_of_external_command(command: str) -> str | None:
@@ -102,7 +101,7 @@ def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> No
                 proc = subprocess.Popen(
                     command.args_with_name, stdout=stdout_target, stderr=stderr_target
                 )
-                background_jobs[curr_background_num] = [proc, command.raw_command]
+                background_jobs.append([proc, curr_background_num, command.raw_command])
                 print(f"[{curr_background_num}] {proc.pid}")
                 curr_background_num += 1
             else:
