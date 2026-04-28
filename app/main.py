@@ -87,12 +87,7 @@ def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> No
 
 def completer(text, state):
     options = []
-    for entry in Path(".").rglob("*"):
-        if entry.is_dir():
-            print(f"adding dir: {entry}")
-            options.append(str(entry) + "/")
-        else:
-            options.append(str(entry))
+    options.extend([str(entry) for entry in Path(".").rglob("*")])
     options.extend(BUILT_IN_COMMANDS.keys())
     if path is not None:
         dirs = path.split(os.pathsep)
@@ -103,12 +98,15 @@ def completer(text, state):
                         os.path.join(d, f), os.X_OK
                     ):
                         options.append(f)
-    matches = [s for s in options if s.startswith(text)]
+    matches = sorted(s for s in options if s.startswith(text))
     if state < len(matches):
         match = matches[state]
-        return match if match.endswith("/") else match + " "
-    else:
-        return None
+        if os.path.isdir(match):
+            return match + "/"
+        else:
+            return match + " "
+
+    return None
 
 
 def main():
