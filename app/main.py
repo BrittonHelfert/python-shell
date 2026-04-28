@@ -98,6 +98,7 @@ def completer(text, state):
                         options.append(f)
     for entry in Path(".").rglob("*"):
         if entry.is_dir():
+            print(f"adding dir: {str(entry)}/")
             options.append(str(entry) + "/")
         else:
             options.append(str(entry))
