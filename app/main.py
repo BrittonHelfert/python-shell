@@ -1,4 +1,5 @@
 import os
+import readline
 import subprocess
 import sys
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
@@ -82,11 +83,19 @@ def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> No
             print(f"{command.name}: {e}")
 
 
-def main():
-    while True:
-        sys.stdout.write("$ ")
+def completer(text, state):
+    options = ["echo", "exit"]
+    matches = [s for s in options if s.startswith(text)]
+    return matches[state] if state < len(matches) else None
 
-        line = input()
+
+def main():
+
+    readline.set_completer(completer)
+    readline.parse_and_bind("tab: complete")
+
+    while True:
+        line = input("$ ")
         command = parse_input(line)
 
         run_command(command)
