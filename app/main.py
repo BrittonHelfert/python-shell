@@ -88,16 +88,20 @@ def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> No
 def completer(text, state):
     options = []
     options.extend([str(entry) for entry in Path(".").rglob("*")])
-    options.extend(BUILT_IN_COMMANDS.keys())
-    if path is not None:
-        dirs = path.split(os.pathsep)
-        for d in dirs:
-            if os.path.exists(d):
-                for f in os.listdir(d):
-                    if os.path.isfile(os.path.join(d, f)) and os.access(
-                        os.path.join(d, f), os.X_OK
-                    ):
-                        options.append(f)
+    # if text is empty, only show dirs and files
+    if text:
+        # builtins
+        options.extend(BUILT_IN_COMMANDS.keys())
+        # path executables
+        if path is not None:
+            dirs = path.split(os.pathsep)
+            for d in dirs:
+                if os.path.exists(d):
+                    for f in os.listdir(d):
+                        if os.path.isfile(os.path.join(d, f)) and os.access(
+                            os.path.join(d, f), os.X_OK
+                        ):
+                            options.append(f)
     matches = sorted(s for s in options if s.startswith(text))
     if state < len(matches):
         match = matches[state]
