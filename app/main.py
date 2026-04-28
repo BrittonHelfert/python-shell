@@ -96,8 +96,8 @@ def completer(text, state):
                         os.path.join(d, f), os.X_OK
                     ):
                         options.append(f)
-    files_in_current_dir = [str(f) for f in Path(".").rglob("*") if f.is_file()]
-    options.extend(files_in_current_dir)
+    current_dir_list = [str(f) for f in Path(".").rglob("*")]
+    options.extend(current_dir_list)
     matches = [s for s in options if s.startswith(text)]
     return matches[state] + " " if state < len(matches) else None
 
