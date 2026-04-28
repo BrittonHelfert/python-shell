@@ -15,9 +15,14 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "type": lambda args: print(check_type(" ".join(args))),
     "pwd": lambda args: print(os.getcwd()),
     "cd": lambda args: cd(" ".join(args)),
+    "jobs": lambda args: list_jobs(),
 }
 
 path = os.environ.get("PATH")
+
+
+def list_jobs() -> None:
+    print("")
 
 
 def cd(path: str) -> None:
