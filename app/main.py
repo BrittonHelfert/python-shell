@@ -104,7 +104,7 @@ def completer(text, state):
     matches = [s for s in options if s.startswith(text)]
     if state < len(matches):
         match = matches[state]
-        return match if match.endswith("/") else match + " "
+        return match if match.endswith("/") else match
     else:
         return None
 
