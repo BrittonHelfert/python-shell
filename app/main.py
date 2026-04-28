@@ -104,6 +104,7 @@ def completer(text, state):
                         options.append(f)
     matches = [s for s in options if s.startswith(text)]
     if state < len(matches):
+        print(f"match: {matches[state]}")
         match = matches[state]
         return match if match.endswith("/") else match + " "
     else:
