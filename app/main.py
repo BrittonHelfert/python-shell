@@ -100,7 +100,7 @@ def completer(text, state):
         if entry.is_file():
             options.append(str(entry) + " ")
         if entry.is_dir():
-            options.append(str(entry) + "/ ")
+            options.append(str(entry) + "/")
     matches = [s for s in options if s.startswith(text)]
     if state < len(matches):
         match = matches[state]
