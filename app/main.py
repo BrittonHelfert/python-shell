@@ -8,13 +8,15 @@ from typing import Callable
 from .parser import parse_input
 from .types import ParsedCommand
 
-COMMANDS: dict[str, Callable[[list[str]], None]] = {
+BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "exit": lambda args: sys.exit(0),
     "echo": lambda args: print(" ".join(args)),
     "type": lambda args: print(check_type(" ".join(args))),
     "pwd": lambda args: print(os.getcwd()),
     "cd": lambda args: cd(" ".join(args)),
 }
+
+path = os.environ.get("PATH")
 
 
 def cd(path: str) -> None:
@@ -27,9 +29,8 @@ def cd(path: str) -> None:
 
 
 def get_path_of_external_command(command: str) -> str | None:
-    env_path = os.getenv("PATH")
-    if env_path is not None:
-        for p in env_path.split(os.pathsep):
+    if path is not None:
+        for p in path.split(os.pathsep):
             if os.path.exists(os.path.join(p, command)):
                 if os.access(os.path.join(p, command), os.X_OK):
                     return os.path.join(p, command)
@@ -37,7 +38,7 @@ def get_path_of_external_command(command: str) -> str | None:
 
 
 def check_type(command: str) -> str:
-    if command in COMMANDS:
+    if command in BUILT_IN_COMMANDS:
         return f"{command} is a shell builtin"
     else:
         path = get_path_of_external_command(command)
@@ -66,8 +67,8 @@ def run_command(command: ParsedCommand) -> None:
 
 def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> None:
     # Check if it's a builtin
-    if command.name in COMMANDS:
-        COMMANDS[command.name](command.args)
+    if command.name in BUILT_IN_COMMANDS:
+        BUILT_IN_COMMANDS[command.name](command.args)
 
     # Otherwise, try to run it as an external command
     else:
@@ -84,14 +85,24 @@ def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> No
 
 
 def completer(text, state):
-    options = ["echo ", "exit "]
+    options = list(BUILT_IN_COMMANDS.keys())
+    if path is not None:
+        dirs = path.split(os.pathsep)
+        for d in dirs:
+            if os.path.exists(d):
+                for f in os.listdir(d):
+                    if os.path.isfile(os.path.join(d, f)) and os.access(
+                        os.path.join(d, f), os.X_OK
+                    ):
+                        options.append(f)
     matches = [s for s in options if s.startswith(text)]
-    return matches[state] if state < len(matches) else None
+    return matches[state] + " " if state < len(matches) else None
 
 
 def main():
 
     readline.set_completer(completer)
+    readline.set_completer_delims(" \n")
     readline.parse_and_bind("tab: complete")
 
     while True:
