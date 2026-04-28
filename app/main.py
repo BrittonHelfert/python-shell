@@ -3,7 +3,6 @@ import readline
 import subprocess
 import sys
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
-from nt import remove
 from pathlib import Path
 from typing import Callable
 
