@@ -19,6 +19,7 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
 }
 
 path = os.environ.get("PATH")
+background_job_num = 1
 
 
 def list_jobs() -> None:
@@ -79,9 +80,17 @@ def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> No
     # Otherwise, try to run it as an external command
     else:
         try:
-            subprocess.run(
-                command.args_with_name, stdout=stdout_target, stderr=stderr_target
-            )
+            if command.is_background:
+                global background_job_num
+                proc = subprocess.Popen(
+                    command.args_with_name, stdout=stdout_target, stderr=stderr_target
+                )
+                print(f"[{background_job_num}] {proc.pid}")
+                background_job_num += 1
+            else:
+                subprocess.run(
+                    command.args_with_name, stdout=stdout_target, stderr=stderr_target
+                )
         except FileNotFoundError:
             print(f"{command.name}: not found")
         except PermissionError:
