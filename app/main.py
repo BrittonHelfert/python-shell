@@ -84,9 +84,9 @@ def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> No
 
 
 def completer(text, state):
-    options = ["echo", "exit"]
+    options = ["echo ", "exit "]
     matches = [s for s in options if s.startswith(text)]
-    return matches[state].append(" ") if state < len(matches) else None
+    return matches[state] if state < len(matches) else None
 
 
 def main():
