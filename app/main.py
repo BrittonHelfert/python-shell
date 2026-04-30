@@ -1,6 +1,7 @@
 import os
 import readline
 
+from .builtins import BUILT_IN_COMMANDS
 from .executor import run_command, run_pipeline
 from .history import add_entry, read_history
 from .jobs import remove_completed_jobs
@@ -8,10 +9,6 @@ from .parser import parse_input
 from .types import Pipeline
 
 EXECUTABLES_CACHE: list[str] = []
-
-COMPLETION_SCRIPT_REGISTRY: dict[str, str] = {}
-
-from .builtins import BUILT_IN_COMMANDS
 
 
 def completer(text, state):

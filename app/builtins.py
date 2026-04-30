@@ -5,7 +5,8 @@ from typing import Callable
 
 from .history import history, write_history
 from .jobs import list_jobs
-from .main import COMPLETION_SCRIPT_REGISTRY
+
+COMPLETION_SCRIPT_REGISTRY: dict[str, str] = {}
 
 BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "exit": lambda args: exit(),
