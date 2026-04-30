@@ -29,10 +29,7 @@ def register_complete(args: list[str]) -> None:
                 raise ValueError("Invalid complete option")
         elif args[0] == "-C":
             if len(args) == 3:
-                if os.path.isfile(args[1]):
-                    COMPLETION_SCRIPT_REGISTRY[args[2]] = args[1]
-                else:
-                    print(f"complete: {args[1]}: no such file or directory")
+                COMPLETION_SCRIPT_REGISTRY[args[2]] = args[1]
             else:
                 raise ValueError("Invalid complete option")
 
