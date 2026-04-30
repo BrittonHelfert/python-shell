@@ -41,13 +41,11 @@ def print_history(args) -> None:
     if args:
         if len(args) > 1:
             raise ValueError("history: too many arguments")
-        elif isinstance(args[0], int):
-            if args[0] > len(get_history()):
-                raise ValueError("history: index out of range")
-            else:
-                k_most_recent = args[0]
         else:
-            raise ValueError("history: invalid argument")
+            try:
+                k_most_recent = int(args[0])
+            except ValueError:
+                raise ValueError("history: invalid argument")
 
     for i, entry in enumerate(get_history()):
         if i < len(history) - k_most_recent:
