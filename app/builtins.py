@@ -54,7 +54,7 @@ def history(args) -> None:
 
     k_most_recent = len(history)
 
-    if args:
+    if args and overwrite_path is None:
         try:
             k_most_recent = int(args[0])
         except ValueError:
