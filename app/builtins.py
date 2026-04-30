@@ -14,7 +14,12 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "cd": lambda args: cd(" ".join(args)),
     "jobs": lambda args: list_jobs(),
     "history": lambda args: history(args),
+    "complete": lambda args: register_complete(args),
 }
+
+
+def register_complete(args: list[str]) -> None:
+    return
 
 
 def exit() -> None:
