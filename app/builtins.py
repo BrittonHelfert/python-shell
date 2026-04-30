@@ -41,19 +41,18 @@ def history(args) -> None:
     overwrite_path = None
 
     if args:
-        if len(args) > 1:
-            raise ValueError("history: too many arguments")
+        if args[0] == "-r":
+            try:
+                overwrite_path = args[1]
+            except IndexError:
+                raise ValueError("history: too few arguments")
+        elif len(args) == 1:
+            try:
+                k_most_recent = int(args[0])
+            except ValueError:
+                raise ValueError("history: invalid argument")
         else:
-            if args[0] == "-r":
-                try:
-                    overwrite_path = args[1]
-                except IndexError:
-                    raise ValueError("history: too few arguments")
-            else:
-                try:
-                    k_most_recent = int(args[0])
-                except ValueError:
-                    raise ValueError("history: invalid argument")
+            raise ValueError("history: unrecognized arguments")
 
     if overwrite_path:
         # split file by newline, print as history, append to history
