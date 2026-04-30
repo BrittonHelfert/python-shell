@@ -11,6 +11,9 @@ EXECUTABLES_CACHE: list[str] = []
 
 
 def completer(text, state):
+    token_start = readline.get_begidx()
+    completing_command_name = token_start == 0
+
     dir_part = text.rsplit("/", 1)[0] + "/" if "/" in text else None
     prefix = text.rsplit("/", 1)[1] if "/" in text else text
     options = []
@@ -22,7 +25,7 @@ def completer(text, state):
         options.extend([entry.name for entry in os.scandir(".")])
 
     # if text is empty, only show dirs and files
-    if dir_part is None:
+    if completing_command_name and dir_part is None:
         # builtins
         options.extend(BUILT_IN_COMMANDS.keys())
         # path executables
