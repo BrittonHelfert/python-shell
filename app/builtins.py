@@ -28,6 +28,7 @@ def register_complete(args: list[str]) -> None:
             else:
                 raise ValueError("Invalid complete option")
         elif args[0] == "-C":
+            print(args)
             if len(args) == 3:
                 COMPLETION_SCRIPT_REGISTRY[args[2]] = args[1]
             else:
