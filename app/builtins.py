@@ -29,7 +29,7 @@ def register_complete(args: list[str]) -> None:
                         f"complete -C '{COMPLETION_SCRIPT_REGISTRY[args[1]]}' {args[1]}"
                     )
                 else:
-                    print(f"complete: {args[1]}: no such file or directory")
+                    print(f"complete: {args[1]}: no completion specification")
             else:
                 raise ValueError("Invalid complete option")
         elif args[0] == "-C":
