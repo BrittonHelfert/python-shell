@@ -21,8 +21,13 @@ If one is registered:
 
 
 def run_completion_script(script: str) -> list[str]:
+    print(f"running completion script: {script}")
     result = subprocess.run(script, capture_output=True, text=True)
-    return result.stdout.splitlines() if result.returncode == 0 else []
+    if result.returncode != 0:
+        print(f"completion script failed: {result.stderr}")
+    res = result.stdout.splitlines() if result.returncode == 0 else []
+    print(f"completion script result: {res}")
+    return res
 
 
 def completer(text, state):
