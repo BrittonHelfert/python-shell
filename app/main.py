@@ -41,7 +41,7 @@ def completer(text, state):
 
     if use_command_completer:
         os.environ["COMP_LINE"] = line_buffer
-        os.environ["COMP_POINT"] = str(token_start)
+        os.environ["COMP_POINT"] = str(readline.get_endidx())
         previous_word = (
             line_buffer.split(" ")[-2] if len(line_buffer.split(" ")) > 2 else ""
         )
