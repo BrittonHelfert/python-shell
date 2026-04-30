@@ -11,10 +11,6 @@ def run_command(command: ParsedCommand) -> None:
     if command.is_empty:
         return
 
-    if command.name in BUILT_IN_COMMANDS:
-        _run_builtin(command)
-        return
-
     with ExitStack() as stack:
         stdout_target = None
         stderr_target = None
@@ -29,7 +25,10 @@ def run_command(command: ParsedCommand) -> None:
             stderr_target = open(command.stderr_redirect_path, mode)
             stack.enter_context(redirect_stderr(stderr_target))
 
-        _run_external(command, stdout=stdout_target, stderr=stderr_target)
+        if command.name in BUILT_IN_COMMANDS:
+            _run_builtin(command)
+        else:
+            _run_external(command, stdout=stdout_target, stderr=stderr_target)
 
 
 def run_pipeline(pipe: Pipeline) -> None:
