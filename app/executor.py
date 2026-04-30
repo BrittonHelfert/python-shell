@@ -29,7 +29,7 @@ def run_command(command: ParsedCommand) -> None:
             stderr_target = open(command.stderr_redirect_path, mode)
             stack.enter_context(redirect_stderr(stderr_target))
 
-        _run_external(command, stdout_target, stderr_target)
+        _run_external(command, stdout=stdout_target, stderr=stderr_target)
 
 
 def run_pipeline(pipe: Pipeline) -> None:
