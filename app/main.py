@@ -40,6 +40,8 @@ def completer(text, state):
     options = []
 
     if use_command_completer:
+        os.environ["COMP_LINE"] = line_buffer
+        os.environ["COMP_POINT"] = str(token_start)
         previous_word = (
             line_buffer.split(" ")[-2] if len(line_buffer.split(" ")) > 2 else ""
         )
