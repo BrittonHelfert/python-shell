@@ -1,7 +1,8 @@
 import os
 import readline
+import subprocess
 
-from .builtins import BUILT_IN_COMMANDS
+from .builtins import BUILT_IN_COMMANDS, COMPLETION_SCRIPT_REGISTRY
 from .executor import run_command, run_pipeline
 from .history import add_entry, read_history
 from .jobs import remove_completed_jobs
@@ -10,14 +11,34 @@ from .types import Pipeline
 
 EXECUTABLES_CACHE: list[str] = []
 
+"""When the user types a command name followed by a space and presses TAB,
+your shell should first check whether a completer is registered for that command.
+If one is registered:
+
+1) Run the script as a separate process
+2) Read its stdout
+3) Use each line of output as a completion candidate"""
+
+
+def run_completion_script(script: str) -> list[str]:
+    result = subprocess.run(script, capture_output=True, text=True)
+    return result.stdout.splitlines() if result.returncode == 0 else []
+
 
 def completer(text, state):
     token_start = readline.get_begidx()
+
     completing_command_name = token_start == 0
 
     dir_part = text.rsplit("/", 1)[0] + "/" if "/" in text else None
     prefix = text.rsplit("/", 1)[1] if "/" in text else text
     options = []
+
+    preceding_command = readline.get_line_buffer()[:token_start].split(" ")[-1]
+    if preceding_command in COMPLETION_SCRIPT_REGISTRY:
+        options.extend(
+            run_completion_script(COMPLETION_SCRIPT_REGISTRY[preceding_command])
+        )
 
     if dir_part is not None:
         if not os.path.isdir(dir_part):
