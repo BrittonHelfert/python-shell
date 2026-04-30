@@ -41,7 +41,7 @@ def completer(text, state):
 
     if use_command_completer:
         previous_word = (
-            line_buffer.split(" ")[-1] if len(line_buffer.split(" ")) > 2 else ""
+            line_buffer.split(" ")[-2] if len(line_buffer.split(" ")) > 2 else ""
         )
         COMPLETIONS_CACHE[command_name] = run_completion_script(
             COMPLETION_SCRIPT_REGISTRY[command_name],
