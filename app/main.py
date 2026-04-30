@@ -40,6 +40,8 @@ def completer(text, state):
     options = []
 
     preceding_command = readline.get_line_buffer()[:token_start].split(" ")[-1]
+    print(f"preceding command: {preceding_command}")
+
     if preceding_command in COMPLETION_SCRIPT_REGISTRY:
         options.extend(
             run_completion_script(COMPLETION_SCRIPT_REGISTRY[preceding_command])
