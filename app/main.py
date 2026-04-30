@@ -11,6 +11,8 @@ from .types import Pipeline
 
 EXECUTABLES_CACHE: list[str] = []
 
+COMPLETIONS_CACHE: dict[str, list[str]] = {}
+
 """When the user types a command name followed by a space and presses TAB,
 your shell should first check whether a completer is registered for that command.
 If one is registered:
@@ -21,12 +23,8 @@ If one is registered:
 
 
 def run_completion_script(script: str) -> list[str]:
-    print(f"running completion script: {script}")
     result = subprocess.run(script, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f"completion script failed: {result.stderr}")
     res = result.stdout.splitlines() if result.returncode == 0 else []
-    print(f"completion script result: {res}")
     return res
 
 
@@ -39,13 +37,15 @@ def completer(text, state):
     prefix = text.rsplit("/", 1)[1] if "/" in text else text
     options = []
 
-    preceding_command = readline.get_line_buffer()[:token_start].split(" ")[-1]
-    print(f"preceding command: {preceding_command}")
-
-    if preceding_command in COMPLETION_SCRIPT_REGISTRY:
-        options.extend(
-            run_completion_script(COMPLETION_SCRIPT_REGISTRY[preceding_command])
-        )
+    for preceding_word in readline.get_line_buffer().split(" "):
+        if preceding_word in COMPLETIONS_CACHE:
+            options.extend(COMPLETIONS_CACHE[preceding_word])
+        else:
+            if preceding_word in COMPLETION_SCRIPT_REGISTRY:
+                COMPLETIONS_CACHE[preceding_word] = run_completion_script(
+                    COMPLETION_SCRIPT_REGISTRY[preceding_word]
+                )
+                options.extend(COMPLETIONS_CACHE[preceding_word])
 
     if dir_part is not None:
         if not os.path.isdir(dir_part):
@@ -95,6 +95,15 @@ def main():
     read_history()
 
     while True:
+        # check for completion script after each space
+        current_input = readline.get_line_buffer()
+        if " " in current_input:
+            preceding_command = current_input.split(" ")[-2]
+            if preceding_command not in COMPLETIONS_CACHE:
+                COMPLETIONS_CACHE[preceding_command] = run_completion_script(
+                    COMPLETION_SCRIPT_REGISTRY[preceding_command]
+                )
+
         line = input("$ ")
         add_entry(line)
         command = parse_input(line)
