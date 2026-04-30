@@ -44,9 +44,9 @@ def history(args) -> None:
         except IndexError:
             raise ValueError("history: too few arguments")
         return
-    elif first_arg == "-w":
+    elif first_arg == "-w" or first_arg == "-a":
         try:
-            _write_history(args[1])
+            _write_history(first_arg[1], args[1])
         except IndexError:
             raise ValueError("history: too few arguments")
         return
@@ -69,8 +69,8 @@ def _read_history(path: str) -> None:
     return
 
 
-def _write_history(path: str) -> None:
-    with open(path, "w") as f:
+def _write_history(mode: str, path: str) -> None:
+    with open(path, mode) as f:
         for entry in get_history():
             f.write(entry + "\n")
 
