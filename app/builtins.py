@@ -46,7 +46,7 @@ def history(args) -> None:
         return
     elif first_arg == "-w" or first_arg == "-a":
         try:
-            _write_history(first_arg[1], args[1])
+            _write_history(first_arg[1:], args[1])
         except IndexError:
             raise ValueError("history: too few arguments")
         return
