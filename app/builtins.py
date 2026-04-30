@@ -38,5 +38,5 @@ def print_history(args) -> None:
     if args:
         raise ValueError("history: too many arguments")
 
-    for entry in get_history():
-        print(entry)
+    for i, entry in enumerate(get_history()):
+        print(f"  {i + 1}  {entry}")
