@@ -20,8 +20,8 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
 
 def register_complete(args: list[str]) -> None:
     if args[0] == "-p":
-        if len(args) >= 3:
-            raise ValueError(f"{args[2]}: No completion specification")
+        if len(args) == 2:
+            raise ValueError(f"{args[1]}: No completion specification")
         else:
             raise ValueError("Invalid complete option")
     else:
