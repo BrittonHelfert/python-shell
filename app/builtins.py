@@ -51,6 +51,7 @@ def history(args) -> None:
         with open(overwrite_path, "r") as f:
             history = f.read().splitlines()
             add_entries(history)
+        return
 
     k_most_recent = len(history)
 
