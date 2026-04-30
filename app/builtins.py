@@ -3,7 +3,7 @@ import shutil
 import sys
 from typing import Callable
 
-from .history import get_history
+from .history import add_entries, get_history
 from .jobs import list_jobs
 
 BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
@@ -13,7 +13,7 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "pwd": lambda args: print(os.getcwd()),
     "cd": lambda args: cd(" ".join(args)),
     "jobs": lambda args: list_jobs(),
-    "history": lambda args: print_history(args),
+    "history": lambda args: history(args),
 }
 
 
@@ -34,20 +34,38 @@ def check_type(command: str) -> str:
     return f"{command}: not found"
 
 
-def print_history(args) -> None:
-    history = get_history()
-    k_most_recent = len(history)
+def history(args) -> None:
+    entries = get_history()
+
+    k_most_recent = 0
+    overwrite_path = None
 
     if args:
         if len(args) > 1:
             raise ValueError("history: too many arguments")
         else:
-            try:
-                k_most_recent = int(args[0])
-            except ValueError:
-                raise ValueError("history: invalid argument")
+            if args[0] == "-r":
+                try:
+                    overwrite_path = args[1]
+                except IndexError:
+                    raise ValueError("history: too few arguments")
+            else:
+                try:
+                    k_most_recent = int(args[0])
+                except ValueError:
+                    raise ValueError("history: invalid argument")
 
-    for i, entry in enumerate(get_history()):
-        if i < len(history) - k_most_recent:
+    if overwrite_path:
+        # split file by newline, print as history, append to history
+        with open(overwrite_path, "r") as f:
+            entries = f.read().splitlines()
+            add_entries(entries)
+
+    _print_history(entries, k_most_recent)
+
+
+def _print_history(entries: list[str], k_most_recent: int) -> None:
+    for i, entry in enumerate(entries):
+        if i < len(entries) - k_most_recent:
             continue
         print(f"  {i + 1}  {entry}")
