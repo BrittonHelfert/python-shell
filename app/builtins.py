@@ -12,6 +12,7 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "pwd": lambda args: print(os.getcwd()),
     "cd": lambda args: cd(" ".join(args)),
     "jobs": lambda args: list_jobs(),
+    "history": lambda args: print_history(args),
 }
 
 
@@ -30,3 +31,10 @@ def check_type(command: str) -> str:
         if path is not None:
             return f"{command} is {path}"
     return f"{command}: not found"
+
+
+def print_history(args) -> None:
+    if args:
+        raise ValueError("history: too many arguments")
+
+    return
