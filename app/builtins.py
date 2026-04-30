@@ -3,6 +3,7 @@ import shutil
 import sys
 from typing import Callable
 
+from .history import get_history
 from .jobs import list_jobs
 
 BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
@@ -37,4 +38,5 @@ def print_history(args) -> None:
     if args:
         raise ValueError("history: too many arguments")
 
-    return
+    for entry in get_history():
+        print(entry)

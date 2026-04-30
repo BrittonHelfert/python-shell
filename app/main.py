@@ -1,8 +1,10 @@
 import os
 import readline
+from operator import add
 
 from .builtins import BUILT_IN_COMMANDS
 from .executor import run_command, run_pipeline
+from .history import add_entry
 from .jobs import remove_completed_jobs
 from .parser import parse_input
 from .types import Pipeline
@@ -64,6 +66,7 @@ def main():
 
     while True:
         line = input("$ ")
+        add_entry(line)
         command = parse_input(line)
 
         if isinstance(command, Pipeline):

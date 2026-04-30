@@ -26,7 +26,7 @@ def run_command(command: ParsedCommand) -> None:
             stack.enter_context(redirect_stderr(stderr_target))
 
         if command.name in BUILT_IN_COMMANDS:
-            _run_builtin(command)
+            BUILT_IN_COMMANDS[command.name](command.args)
         else:
             _run_external(command, stdout=stdout_target, stderr=stderr_target)
 
@@ -81,11 +81,6 @@ def run_pipeline(pipe: Pipeline) -> None:
         else:
             for p in procs:
                 p.wait()
-
-
-def _run_builtin(command: ParsedCommand) -> None:
-    if command.name in BUILT_IN_COMMANDS:
-        BUILT_IN_COMMANDS[command.name](command.args)
 
 
 def _run_external(command: ParsedCommand, stdin=None, stdout=None, stderr=None) -> None:
