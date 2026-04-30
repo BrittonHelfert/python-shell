@@ -35,7 +35,7 @@ def check_type(command: str) -> str:
 
 
 def history(args) -> None:
-    entries = get_history()
+    history = get_history()
 
     k_most_recent = 0
     overwrite_path = None
@@ -57,10 +57,10 @@ def history(args) -> None:
     if overwrite_path:
         # split file by newline, print as history, append to history
         with open(overwrite_path, "r") as f:
-            entries = f.read().splitlines()
-            add_entries(entries)
+            history = f.read().splitlines()
+            add_entries(history)
 
-    _print_history(entries, k_most_recent)
+    _print_history(history, k_most_recent)
 
 
 def _print_history(entries: list[str], k_most_recent: int) -> None:
