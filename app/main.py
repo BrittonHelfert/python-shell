@@ -13,17 +13,15 @@ EXECUTABLES_CACHE: list[str] = []
 
 COMPLETIONS_CACHE: dict[str, list[str]] = {}
 
-"""When the user types a command name followed by a space and presses TAB,
-your shell should first check whether a completer is registered for that command.
-If one is registered:
 
-1) Run the script as a separate process
-2) Read its stdout
-3) Use each line of output as a completion candidate"""
-
-
-def run_completion_script(script: str) -> list[str]:
-    result = subprocess.run(script, capture_output=True, text=True)
+def run_completion_script(
+    script: str, command_name: str, prefix: str, previous_word: str
+) -> list[str]:
+    result = subprocess.run(
+        [script, command_name, prefix, previous_word],
+        capture_output=True,
+        text=True,
+    )
     res = result.stdout.splitlines() if result.returncode == 0 else []
     return res
 
@@ -42,10 +40,15 @@ def completer(text, state):
     options = []
 
     if use_command_completer:
-        if command_name not in COMPLETIONS_CACHE:
-            COMPLETIONS_CACHE[command_name] = run_completion_script(
-                COMPLETION_SCRIPT_REGISTRY[command_name]
-            )
+        previous_word = (
+            line_buffer.split(" ")[-1] if len(line_buffer.split(" ")) > 2 else ""
+        )
+        COMPLETIONS_CACHE[command_name] = run_completion_script(
+            COMPLETION_SCRIPT_REGISTRY[command_name],
+            command_name,
+            prefix,
+            previous_word,
+        )
         options.extend(COMPLETIONS_CACHE[command_name])
 
     if not use_command_completer:
