@@ -37,7 +37,6 @@ def check_type(command: str) -> str:
 def history(args) -> None:
     history = get_history()
 
-    k_most_recent = 0
     overwrite_path = None
 
     if args:
@@ -46,19 +45,20 @@ def history(args) -> None:
                 overwrite_path = args[1]
             except IndexError:
                 raise ValueError("history: too few arguments")
-        elif len(args) == 1:
-            try:
-                k_most_recent = int(args[0])
-            except ValueError:
-                raise ValueError("history: invalid argument")
-        else:
-            raise ValueError("history: unrecognized arguments")
 
     if overwrite_path:
         # split file by newline, print as history, append to history
         with open(overwrite_path, "r") as f:
             history = f.read().splitlines()
             add_entries(history)
+
+    k_most_recent = len(history)
+
+    if args:
+        try:
+            k_most_recent = int(args[0])
+        except ValueError:
+            raise ValueError("history: invalid argument")
 
     _print_history(history, k_most_recent)
 
