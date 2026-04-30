@@ -29,33 +29,35 @@ def run_completion_script(script: str) -> list[str]:
 
 
 def completer(text, state):
+    line_buffer = readline.get_line_buffer()
     token_start = readline.get_begidx()
-
     completing_command_name = token_start == 0
+    command_name = line_buffer.split(" ")[0] if line_buffer else ""
+    use_command_completer = (
+        not completing_command_name and command_name in COMPLETION_SCRIPT_REGISTRY
+    )
 
     dir_part = text.rsplit("/", 1)[0] + "/" if "/" in text else None
     prefix = text.rsplit("/", 1)[1] if "/" in text else text
     options = []
 
-    for preceding_word in readline.get_line_buffer().split(" "):
-        if preceding_word in COMPLETIONS_CACHE:
-            options.extend(COMPLETIONS_CACHE[preceding_word])
-        else:
-            if preceding_word in COMPLETION_SCRIPT_REGISTRY:
-                COMPLETIONS_CACHE[preceding_word] = run_completion_script(
-                    COMPLETION_SCRIPT_REGISTRY[preceding_word]
-                )
-                options.extend(COMPLETIONS_CACHE[preceding_word])
+    if use_command_completer:
+        if command_name not in COMPLETIONS_CACHE:
+            COMPLETIONS_CACHE[command_name] = run_completion_script(
+                COMPLETION_SCRIPT_REGISTRY[command_name]
+            )
+        options.extend(COMPLETIONS_CACHE[command_name])
 
-    if dir_part is not None:
-        if not os.path.isdir(dir_part):
-            return None
-        options.extend([entry.name for entry in os.scandir(dir_part)])
-    else:
-        options.extend([entry.name for entry in os.scandir(".")])
+    if not use_command_completer:
+        if dir_part is not None:
+            if not os.path.isdir(dir_part):
+                return None
+            options.extend([entry.name for entry in os.scandir(dir_part)])
+        else:
+            options.extend([entry.name for entry in os.scandir(".")])
 
     # if text is empty, only show dirs and files
-    if completing_command_name and dir_part is None:
+    if completing_command_name and dir_part is None and not use_command_completer:
         # builtins
         options.extend(BUILT_IN_COMMANDS.keys())
         # path executables
@@ -95,15 +97,6 @@ def main():
     read_history()
 
     while True:
-        # check for completion script after each space
-        current_input = readline.get_line_buffer()
-        if " " in current_input:
-            preceding_command = current_input.split(" ")[-2]
-            if preceding_command not in COMPLETIONS_CACHE:
-                COMPLETIONS_CACHE[preceding_command] = run_completion_script(
-                    COMPLETION_SCRIPT_REGISTRY[preceding_command]
-                )
-
         line = input("$ ")
         add_entry(line)
         command = parse_input(line)
