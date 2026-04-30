@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
 
 from .builtins import BUILT_IN_COMMANDS
@@ -8,6 +9,10 @@ from .types import ParsedCommand, Pipeline
 
 def run_command(command: ParsedCommand) -> None:
     if command.is_empty:
+        return
+
+    if command.name in BUILT_IN_COMMANDS:
+        _run_builtin(command)
         return
 
     with ExitStack() as stack:
@@ -24,7 +29,7 @@ def run_command(command: ParsedCommand) -> None:
             stderr_target = open(command.stderr_redirect_path, mode)
             stack.enter_context(redirect_stderr(stderr_target))
 
-        _run_with_output(command, stdout_target, stderr_target)
+        _run_external(command, stdout_target, stderr_target)
 
 
 def run_pipeline(pipe: Pipeline) -> None:
@@ -53,9 +58,18 @@ def run_pipeline(pipe: Pipeline) -> None:
                 mode = "a" if command.stderr_redirect_append else "w"
                 stderr = stack.enter_context(open(command.stderr_redirect_path, mode))
 
-            p = subprocess.Popen(
-                command.args_with_name, stdin=stdin, stdout=stdout, stderr=stderr
-            )
+            if command.name in BUILT_IN_COMMANDS:
+                argv = [
+                    sys.executable,
+                    "-m",
+                    "app.pipeline_builtin_runner",
+                    command.name,
+                    *command.args,
+                ]
+            else:
+                argv = command.args_with_name
+
+            p = subprocess.Popen(argv, stdin=stdin, stdout=stdout, stderr=stderr)
             procs.append(p)
 
             if prev_out is not None:
@@ -70,24 +84,23 @@ def run_pipeline(pipe: Pipeline) -> None:
                 p.wait()
 
 
-def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> None:
-    # Check if it's a builtin
+def _run_builtin(command: ParsedCommand) -> None:
     if command.name in BUILT_IN_COMMANDS:
         BUILT_IN_COMMANDS[command.name](command.args)
 
-    # Otherwise, try to run it as an external command
-    else:
-        try:
-            if command.is_background:
-                proc = subprocess.Popen(
-                    command.args_with_name, stdout=stdout_target, stderr=stderr_target
-                )
-                add_job(command, proc)
-            else:
-                subprocess.run(
-                    command.args_with_name, stdout=stdout_target, stderr=stderr_target
-                )
-        except FileNotFoundError:
-            print(f"{command.name}: not found")
-        except PermissionError:
-            print(f"{command.name}: permission denied")
+
+def _run_external(command: ParsedCommand, stdin=None, stdout=None, stderr=None) -> None:
+    try:
+        if command.is_background:
+            proc = subprocess.Popen(
+                command.args_with_name, stdin=stdin, stdout=stdout, stderr=stderr
+            )
+            add_job(command, proc)
+        else:
+            subprocess.run(
+                command.args_with_name, stdin=stdin, stdout=stdout, stderr=stderr
+            )
+    except FileNotFoundError:
+        print(f"{command.name}: not found")
+    except PermissionError:
+        print(f"{command.name}: permission denied")
