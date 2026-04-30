@@ -1,3 +1,4 @@
+import re
 import subprocess
 from dataclasses import dataclass
 from typing import List
@@ -24,6 +25,12 @@ class ParsedCommand:
     @property
     def raw_command(self) -> str:
         return " ".join(self.args_with_name)
+
+
+@dataclass
+class Pipeline:
+    commands: List[ParsedCommand]
+    is_background: bool = False
 
 
 @dataclass

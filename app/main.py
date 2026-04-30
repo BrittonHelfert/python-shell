@@ -1,174 +1,59 @@
 import os
 import readline
-import subprocess
-import sys
-from contextlib import ExitStack, redirect_stderr, redirect_stdout
-from pathlib import Path
-from typing import Callable
 
+from .builtins import BUILT_IN_COMMANDS
+from .executor import run_command, run_pipeline
+from .jobs import remove_completed_jobs
 from .parser import parse_input
-from .types import BackgroundJob, ParsedCommand
+from .types import Pipeline
 
-BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
-    "exit": lambda args: sys.exit(0),
-    "echo": lambda args: print(" ".join(args)),
-    "type": lambda args: print(check_type(" ".join(args))),
-    "pwd": lambda args: print(os.getcwd()),
-    "cd": lambda args: cd(" ".join(args)),
-    "jobs": lambda args: list_jobs(),
-}
-
-path = os.environ.get("PATH")
-assigned_nums: set[int] = set()
-background_jobs: list[BackgroundJob] = []
-
-
-def cd(path: str) -> None:
-    try:
-        os.chdir(os.path.expanduser(path))
-    except FileNotFoundError:
-        print(f"cd: {path}: No such file or directory")
-    except Exception as e:
-        print(f"{path}: {e}")
-
-
-def list_jobs() -> None:
-    for job in background_jobs:
-        status = "Running" + " " * 17 if job.proc.poll() is None else "Done" + " " * 20
-        print(f"[{job.num}]{job.marker}  {status}  {job.command}")
-    # remove completed jobs
-    remove_completed_jobs()
-
-
-def assign_markers() -> None:
-    for i, job in enumerate(background_jobs):
-        if i == len(background_jobs) - 1:
-            job.marker = "+"
-        elif i == len(background_jobs) - 2:
-            job.marker = "-"
-        else:
-            job.marker = " "
-
-
-def get_next_free_background_num() -> int:
-    res = 1
-    while res in assigned_nums:
-        res += 1
-    return res
-
-
-def remove_completed_jobs(print_each: bool = False) -> None:
-    global next_background_num_to_assign
-    for job in background_jobs:
-        if job.proc.poll() is not None:
-            if print_each:
-                print(f"[{job.num}]{job.marker}  Done{' ' * 20}{job.command}")
-            assigned_nums.remove(job.num)
-            background_jobs.remove(job)
-    assign_markers()
-
-
-def get_path_of_external_command(command: str) -> str | None:
-    if path is not None:
-        for p in path.split(os.pathsep):
-            if os.path.exists(os.path.join(p, command)):
-                if os.access(os.path.join(p, command), os.X_OK):
-                    return os.path.join(p, command)
-    return None
-
-
-def check_type(command: str) -> str:
-    if command in BUILT_IN_COMMANDS:
-        return f"{command} is a shell builtin"
-    else:
-        path = get_path_of_external_command(command)
-        if path is not None:
-            return f"{command} is {path}"
-    return f"{command}: not found"
-
-
-def run_command(command: ParsedCommand) -> None:
-    with ExitStack() as stack:
-        stdout_target = None
-        stderr_target = None
-
-        if command.stdout_redirect_path is not None:
-            mode = "a" if command.stdout_redirect_append else "w"
-            stdout_target = open(command.stdout_redirect_path, mode)
-            stack.enter_context(redirect_stdout(stdout_target))
-
-        if command.stderr_redirect_path is not None:
-            mode = "a" if command.stderr_redirect_append else "w"
-            stderr_target = open(command.stderr_redirect_path, mode)
-            stack.enter_context(redirect_stderr(stderr_target))
-
-        _run_with_output(command, stdout_target, stderr_target)
-
-
-def _run_with_output(command: ParsedCommand, stdout_target, stderr_target) -> None:
-    # Check if it's a builtin
-    if command.name in BUILT_IN_COMMANDS:
-        BUILT_IN_COMMANDS[command.name](command.args)
-
-    # Otherwise, try to run it as an external command
-    else:
-        try:
-            if command.is_background:
-                proc = subprocess.Popen(
-                    command.args_with_name, stdout=stdout_target, stderr=stderr_target
-                )
-                job_num = get_next_free_background_num()
-                background_jobs.append(
-                    BackgroundJob(
-                        proc=proc,
-                        num=job_num,
-                        command=command.raw_command,
-                    )
-                )
-                print(f"[{job_num}] {proc.pid}")
-                assigned_nums.add(job_num)
-                assign_markers()
-            else:
-                subprocess.run(
-                    command.args_with_name, stdout=stdout_target, stderr=stderr_target
-                )
-        except FileNotFoundError:
-            print(f"{command.name}: not found")
-        except PermissionError:
-            print(f"{command.name}: permission denied")
-        except Exception as e:
-            print(f"{command.name}: {e}")
+EXECUTABLES_CACHE: list[str] = []
 
 
 def completer(text, state):
+    dir_part = text.rsplit("/", 1)[0] + "/" if "/" in text else None
+    prefix = text.rsplit("/", 1)[1] if "/" in text else text
     options = []
-    options.extend([str(entry) for entry in Path(".").rglob("*")])
+    if dir_part is not None:
+        if not os.path.isdir(dir_part):
+            return None
+        options.extend([entry.name for entry in os.scandir(dir_part)])
+    else:
+        options.extend([entry.name for entry in os.scandir(".")])
+
     # if text is empty, only show dirs and files
-    if text:
+    if dir_part is None:
         # builtins
         options.extend(BUILT_IN_COMMANDS.keys())
         # path executables
-        if path is not None:
-            dirs = path.split(os.pathsep)
-            for d in dirs:
-                if os.path.exists(d):
-                    for f in os.listdir(d):
-                        if os.path.isfile(os.path.join(d, f)) and os.access(
-                            os.path.join(d, f), os.X_OK
-                        ):
-                            options.append(f)
-    matches = sorted(s for s in options if s.startswith(text))
+        options.extend(EXECUTABLES_CACHE)
+    matches = sorted(s for s in options if s.startswith(prefix))
     if state < len(matches):
         match = matches[state]
-        if os.path.isdir(match):
-            return match + "/"
+        output = dir_part + match if dir_part is not None else match
+        if os.path.isdir(output):
+            return output + "/"
         else:
-            return match + " "
+            return output + " "
 
     return None
 
 
+def refresh_executables_cache():
+    path = os.environ.get("PATH")
+    if path is not None:
+        dirs = path.split(os.pathsep)
+        for d in dirs:
+            if os.path.exists(d):
+                for f in os.listdir(d):
+                    if os.path.isfile(os.path.join(d, f)) and os.access(
+                        os.path.join(d, f), os.X_OK
+                    ):
+                        EXECUTABLES_CACHE.append(f)
+
+
 def main():
+    refresh_executables_cache()
 
     readline.set_completer(completer)
     readline.set_completer_delims(" \n")
@@ -178,7 +63,11 @@ def main():
         line = input("$ ")
         command = parse_input(line)
 
-        run_command(command)
+        if isinstance(command, Pipeline):
+            run_pipeline(command)
+        else:
+            run_command(command)
+
         remove_completed_jobs(print_each=True)
 
 
