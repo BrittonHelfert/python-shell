@@ -1,7 +1,6 @@
 import os
 import shutil
 import sys
-from genericpath import isfile
 from typing import Callable
 
 from .history import history, write_history
