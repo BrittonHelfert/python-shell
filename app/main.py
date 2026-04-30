@@ -3,12 +3,14 @@ import readline
 
 from .builtins import BUILT_IN_COMMANDS
 from .executor import run_command, run_pipeline
-from .history import add_entry, read_history, write_history
+from .history import add_entry, read_history
 from .jobs import remove_completed_jobs
 from .parser import parse_input
 from .types import Pipeline
 
 EXECUTABLES_CACHE: list[str] = []
+
+COMPLETION_SCRIPT_REGISTRY: dict[str, str] = {}
 
 
 def completer(text, state):
@@ -18,6 +20,7 @@ def completer(text, state):
     dir_part = text.rsplit("/", 1)[0] + "/" if "/" in text else None
     prefix = text.rsplit("/", 1)[1] if "/" in text else text
     options = []
+
     if dir_part is not None:
         if not os.path.isdir(dir_part):
             return None

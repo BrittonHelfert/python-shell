@@ -1,10 +1,12 @@
 import os
 import shutil
 import sys
+from genericpath import isfile
 from typing import Callable
 
 from .history import history, write_history
 from .jobs import list_jobs
+from .main import COMPLETION_SCRIPT_REGISTRY
 
 BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "exit": lambda args: exit(),
@@ -19,13 +21,22 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
 
 
 def register_complete(args: list[str]) -> None:
-    if args[0] == "-p":
-        if len(args) == 2:
-            print(f"complete: {args[1]}: no completion specification")
-        else:
-            raise ValueError("Invalid complete option")
-    else:
-        raise ValueError("Invalid complete option")
+    if args:
+        if args[0] == "-p":
+            if len(args) == 2:
+                print(f"complete: {args[1]}: no completion specification")
+            else:
+                raise ValueError("Invalid complete option")
+        elif args[0] == "-C":
+            if len(args) == 3:
+                if os.path.isfile(args[1]):
+                    COMPLETION_SCRIPT_REGISTRY[args[2]] = args[1]
+                else:
+                    print(f"complete: {args[1]}: no such file or directory")
+            else:
+                raise ValueError("Invalid complete option")
+
+    raise ValueError("Invalid complete option")
 
 
 def exit() -> None:
