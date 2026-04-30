@@ -1,5 +1,9 @@
+import os
+
 command_history: list[str] = []
 unstaged: list[str] = []
+
+HIST_FILE = os.getenv("HISTFILE")
 
 
 def add_entry(entry: str) -> None:
@@ -17,19 +21,19 @@ def history(args) -> None:
 
     if first_arg == "-r":
         try:
-            _read_history(args[1])
+            read_history(args[1])
         except IndexError:
             raise ValueError("history: too few arguments")
         return
     elif first_arg == "-w":
         try:
-            _write_history(args[1])
+            write_history(args[1])
         except IndexError:
             raise ValueError("history: too few arguments")
         return
     elif first_arg == "-a":
         try:
-            _append_history(args[1])
+            append_history(args[1])
         except IndexError:
             raise ValueError("history: too few arguments")
         return
@@ -44,20 +48,22 @@ def history(args) -> None:
         _print_history(command_history, k_most_recent)
 
 
-def _read_history(path: str) -> None:
-    with open(path, "r") as f:
-        history = f.read().splitlines()
+def read_history(path=HIST_FILE) -> None:
+    if path is not None:
+        with open(path, "r") as f:
+            history = f.read().splitlines()
         add_entries(history)
     return
 
 
-def _write_history(path: str) -> None:
-    with open(path, "w") as f:
-        for entry in command_history:
-            f.write(entry + "\n")
+def write_history(path=HIST_FILE) -> None:
+    if path is not None:
+        with open(path, "w") as f:
+            for entry in command_history:
+                f.write(entry + "\n")
 
 
-def _append_history(path: str) -> None:
+def append_history(path: str) -> None:
     with open(path, "a") as f:
         for entry in unstaged:
             f.write(entry + "\n")

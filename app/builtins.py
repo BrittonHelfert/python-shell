@@ -3,11 +3,11 @@ import shutil
 import sys
 from typing import Callable
 
-from .history import history
+from .history import history, write_history
 from .jobs import list_jobs
 
 BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
-    "exit": lambda args: sys.exit(0),
+    "exit": lambda args: exit(),
     "echo": lambda args: print(" ".join(args)),
     "type": lambda args: print(check_type(" ".join(args))),
     "pwd": lambda args: print(os.getcwd()),
@@ -15,6 +15,11 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "jobs": lambda args: list_jobs(),
     "history": lambda args: history(args),
 }
+
+
+def exit() -> None:
+    write_history()
+    sys.exit(0)
 
 
 def cd(path: str) -> None:
