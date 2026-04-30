@@ -35,33 +35,44 @@ def check_type(command: str) -> str:
 
 
 def history(args) -> None:
-    history = get_history()
 
-    overwrite_path = None
+    first_arg = args[0] if args else None
 
-    if args:
-        if args[0] == "-r":
-            try:
-                overwrite_path = args[1]
-            except IndexError:
-                raise ValueError("history: too few arguments")
-
-    if overwrite_path:
-        # split file by newline, print as history, append to history
-        with open(overwrite_path, "r") as f:
-            history = f.read().splitlines()
-            add_entries(history)
-        return
-
-    k_most_recent = len(history)
-
-    if args and overwrite_path is None:
+    if first_arg == "-r":
         try:
-            k_most_recent = int(args[0])
-        except ValueError:
-            raise ValueError("history: invalid argument")
+            _read_history(args[1])
+        except IndexError:
+            raise ValueError("history: too few arguments")
+        return
+    elif first_arg == "-w":
+        try:
+            _write_history(args[1])
+        except IndexError:
+            raise ValueError("history: too few arguments")
+        return
+    else:
+        history = get_history()
+        if args:
+            try:
+                k_most_recent = int(args[0])
+            except ValueError:
+                raise ValueError("history: invalid argument")
+        else:
+            k_most_recent = len(history)
+        _print_history(history, k_most_recent)
 
-    _print_history(history, k_most_recent)
+
+def _read_history(path: str) -> None:
+    with open(path, "r") as f:
+        history = f.read().splitlines()
+        add_entries(history)
+    return
+
+
+def _write_history(path: str) -> None:
+    with open(path, "w") as f:
+        for entry in get_history():
+            f.write(entry + "\n")
 
 
 def _print_history(entries: list[str], k_most_recent: int) -> None:
