@@ -16,11 +16,11 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "cd": lambda args: cd(" ".join(args)),
     "jobs": lambda args: list_jobs(),
     "history": lambda args: history(args),
-    "complete": lambda args: register_complete(args),
+    "complete": lambda args: complete(args),
 }
 
 
-def register_complete(args: list[str]) -> None:
+def complete(args: list[str]) -> None:
     if args:
         if args[0] == "-p":
             if len(args) == 2:
@@ -37,6 +37,16 @@ def register_complete(args: list[str]) -> None:
                 COMPLETION_SCRIPT_REGISTRY[args[2]] = args[1]
             else:
                 raise ValueError("Invalid complete option")
+        elif args[0] == "-r":
+            if len(args) == 2:
+                if args[1] in COMPLETION_SCRIPT_REGISTRY:
+                    del COMPLETION_SCRIPT_REGISTRY[args[1]]
+                else:
+                    print(f"complete: {args[1]}: no completion specification")
+            else:
+                raise ValueError("Invalid complete option")
+        else:
+            raise ValueError("Invalid complete option")
     else:
         raise ValueError("Invalid complete option")
 
