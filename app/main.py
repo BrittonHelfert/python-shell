@@ -1,6 +1,7 @@
 import os
 import readline
 import subprocess
+import sys
 
 from .builtins import BUILT_IN_COMMANDS, COMPLETION_SCRIPT_REGISTRY
 from .executor import run_command, run_pipeline
@@ -26,6 +27,13 @@ def run_completion_script(
     return res
 
 
+def display_matches(substitution, matches, longest_match_length, line_buffer):
+    candidates = sorted(m.rstrip() for m in matches[1:])  # skip matches[0]
+    sys.stdout.write("\n" + "  ".join(candidates) + "\n")
+    sys.stdout.write("$ " + line_buffer)
+    sys.stdout.flush()
+
+
 def completer(text, state):
     line_buffer = readline.get_line_buffer()
     token_start = readline.get_begidx()
@@ -38,6 +46,15 @@ def completer(text, state):
     dir_part = text.rsplit("/", 1)[0] + "/" if "/" in text else None
     prefix = text.rsplit("/", 1)[1] if "/" in text else text
     options = []
+
+    if use_command_completer:
+        readline.set_completion_display_matches_hook(
+            lambda substitution, matches, longest_match_length: display_matches(
+                substitution, matches, longest_match_length, line_buffer
+            )
+        )
+    else:
+        readline.set_completion_display_matches_hook(None)
 
     if use_command_completer:
         os.environ["COMP_LINE"] = line_buffer
