@@ -60,7 +60,7 @@ def completer(text, state):
         os.environ["COMP_LINE"] = line_buffer
         os.environ["COMP_POINT"] = str(readline.get_endidx())
         previous_word = (
-            line_buffer.split(" ")[-2] if len(line_buffer.split(" ")) > 2 else ""
+            line_buffer.split(" ")[-2] if len(line_buffer.split(" ")) > 1 else ""
         )
         COMPLETIONS_CACHE[command_name] = run_completion_script(
             COMPLETION_SCRIPT_REGISTRY[command_name],
