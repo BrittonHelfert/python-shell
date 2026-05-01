@@ -23,12 +23,11 @@ def run_completion_script(
         capture_output=True,
         text=True,
     )
-    res = result.stdout.splitlines() if result.returncode == 0 else []
-    return res
+    return result.stdout.splitlines() if result.returncode == 0 else []
 
 
 def display_matches(substitution, matches, longest_match_length, line_buffer):
-    candidates = sorted(m.rstrip() for m in matches[1:])  # skip matches[0]
+    candidates = sorted(m.rstrip() for m in matches)
     sys.stdout.write("\n" + "  ".join(candidates) + "\n")
     sys.stdout.write("$ " + line_buffer)
     sys.stdout.flush()
