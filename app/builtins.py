@@ -17,7 +17,12 @@ BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
     "jobs": lambda args: list_jobs(),
     "history": lambda args: history(args),
     "complete": lambda args: complete(args),
+    "declare": lambda args: declare(args),
 }
+
+
+def declare(args: list[str]) -> None:
+    return
 
 
 def complete(args: list[str]) -> None:
