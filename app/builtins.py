@@ -1,0 +1,99 @@
+import os
+import shutil
+import sys
+from typing import Callable
+
+from .history import history, write_history
+from .jobs import list_jobs
+
+COMPLETION_SCRIPT_REGISTRY: dict[str, str] = {}
+SHELL_VARIABLES: dict[str, str] = {}
+
+BUILT_IN_COMMANDS: dict[str, Callable[[list[str]], None]] = {
+    "exit": lambda args: exit(),
+    "echo": lambda args: print(" ".join(args)),
+    "type": lambda args: print(check_type(" ".join(args))),
+    "pwd": lambda args: print(os.getcwd()),
+    "cd": lambda args: cd(" ".join(args)),
+    "jobs": lambda args: list_jobs(),
+    "history": lambda args: history(args),
+    "complete": lambda args: complete(args),
+    "declare": lambda args: declare(args),
+}
+
+
+def declare(args: list[str]) -> None:
+    if args and args[0] == "-p":
+        for name in args[1:]:
+            if name in SHELL_VARIABLES:
+                print(f'declare -- {name}="{SHELL_VARIABLES[name]}"')
+            else:
+                print(f"declare: {name}: not found", file=sys.stderr)
+        return
+    for arg in args:
+        name, sep, value = arg.partition("=")
+        target = name if sep else arg
+        if not _is_valid_identifier(target):
+            print(f"declare: `{arg}': not a valid identifier", file=sys.stderr)
+            continue
+        if sep:
+            SHELL_VARIABLES[name] = value
+
+
+def _is_valid_identifier(name: str) -> bool:
+    if not name or not (name[0].isalpha() or name[0] == "_"):
+        return False
+    return all(c.isalnum() or c == "_" for c in name[1:])
+
+
+def complete(args: list[str]) -> None:
+    if args:
+        if args[0] == "-p":
+            if len(args) == 2:
+                if args[1] in COMPLETION_SCRIPT_REGISTRY:
+                    print(
+                        f"complete -C '{COMPLETION_SCRIPT_REGISTRY[args[1]]}' {args[1]}"
+                    )
+                else:
+                    print(f"complete: {args[1]}: no completion specification", file=sys.stderr)
+            else:
+                raise ValueError("Invalid complete option")
+        elif args[0] == "-C":
+            if len(args) == 3:
+                COMPLETION_SCRIPT_REGISTRY[args[2]] = args[1]
+            else:
+                raise ValueError("Invalid complete option")
+        elif args[0] == "-r":
+            if len(args) == 2:
+                if args[1] in COMPLETION_SCRIPT_REGISTRY:
+                    del COMPLETION_SCRIPT_REGISTRY[args[1]]
+                else:
+                    print(f"complete: {args[1]}: no completion specification", file=sys.stderr)
+            else:
+                raise ValueError("Invalid complete option")
+        else:
+            raise ValueError("Invalid complete option")
+    else:
+        raise ValueError("Invalid complete option")
+
+
+def exit() -> None:
+    write_history()
+    sys.exit(0)
+
+
+def cd(path: str) -> None:
+    try:
+        os.chdir(os.path.expanduser(path))
+    except FileNotFoundError:
+        print(f"cd: {path}: No such file or directory", file=sys.stderr)
+
+
+def check_type(command: str) -> str:
+    if command in BUILT_IN_COMMANDS:
+        return f"{command} is a shell builtin"
+    else:
+        path = shutil.which(command, mode=os.X_OK)
+        if path is not None:
+            return f"{command} is {path}"
+    return f"{command}: not found"
